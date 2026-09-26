@@ -9,6 +9,7 @@
   {"query": "My PAN is ABCDE1234F please help", "expect_contains": ["remove personal details"], "expect_url": "https://groww.in/help", "mode": "refusal"},
   {"query": "What is the expense ratio of Parag Parikh Flexi Cap Fund?", "expect_contains": ["official Groww page"], "expect_url": "parag-parikh-long-term-value-fund-direct-growth", "mode": "directory"},
   {"query": "what hdfc funds exist", "expect_contains": ["Matching funds on Groww"], "expect_url": "https://groww.in/mutual-funds/filter", "mode": "fact"},
+  {"query": "HDFC", "expect_contains": ["Matching funds on Groww"], "expect_url": "https://groww.in/mutual-funds/filter", "mode": "fact"},
   {"query": "hdfc funds", "expect_contains": ["Matching funds on Groww"], "expect_url": "https://groww.in/mutual-funds/filter", "mode": "fact"},
   {"query": "liquid funds", "expect_contains": ["Matching funds on Groww"], "expect_url": "https://groww.in/mutual-funds/filter", "mode": "fact"}
 ]

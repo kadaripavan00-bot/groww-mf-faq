@@ -8,7 +8,7 @@ import {
 import { classifyGuard } from "../lib/guards.js";
 import {
   LAST_UPDATED, SCORE_THRESHOLD,
-  detectCuratedScheme, retrieveKeyword, applyCosine,
+  detectCuratedScheme, detectScheme, retrieveKeyword, applyCosine,
   buildDirIndex, findFund, isListingQuery, listFunds,
 } from "../lib/retrieve.js";
 import { composeExtractive } from "../lib/compose.js";
@@ -54,10 +54,15 @@ export async function ask(query: string, vector: number[] | undefined, deps: Ask
   const dirIndex = buildDirIndex(dirRows);
   const forcedScheme = detectCuratedScheme(q);
 
-  // Listing intent ("what HDFC funds exist") -> up to 8 official links.
-  if (!forcedScheme && isListingQuery(q)) {
+  // Listing intent ("what HDFC funds exist", bare "HDFC") -> up to 8 links.
+  // Short scheme-less queries ("HDFC", "Parag Parikh", "gold") also list:
+  // every remaining token must match, so figure questions can't leak in.
+  // Curated-scheme queries ("tax saver", "liquid", "ELSS lock-in") are
+  // excluded via detectScheme so their facts keep priority.
+  const schemeIds = [...new Set(facts.flatMap((f) => (f.scheme_id ? [f.scheme_id] : [])))];
+  if (!forcedScheme && (isListingQuery(q) || detectScheme(q, schemeIds) === null)) {
     const listing = listFunds(q, dirIndex, 8);
-    if (listing) {
+    if (listing && listing.total >= 2) {
       const names = listing.shown.map((f) => f.name).join("; ");
       const list: FundListItem[] = listing.shown;
       return {

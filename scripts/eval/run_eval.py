@@ -60,9 +60,19 @@ def main():
                     if t not in {"what", "list", "funds", "exist", "show", "me", "all"}]
             hits = [d for d in directory
                     if all(t in d["fund_name"].lower() for t in qtok)] if qtok else []
-            kind = "fact" if len(hits) >= 3 else "missing"
+            kind = "fact" if len(hits) >= 2 else "missing"
             ans = "Matching funds on Groww"
             url = "https://groww.in/mutual-funds/filter"
+        elif len(re.findall(r"[a-z0-9]+", q.lower())) <= 2:
+            # bare short query ("HDFC"): listing iff tokens match 2+ funds
+            qtok = [t for t in re.findall(r"[a-z0-9]+", q.lower())
+                    if t not in {"what", "is", "the", "of", "a", "groww"}]
+            hits = [d for d in directory
+                    if all(t in d["fund_name"].lower() for t in qtok)] if qtok else []
+            if len(hits) >= 2:
+                kind, ans, url = "fact", "Matching funds on Groww", "https://groww.in/mutual-funds/filter"
+            else:
+                kind, ans, url = "missing", "", ""
         else:
             # best-effort: find the seeded fact whose question best overlaps
             qtok = set(re.findall(r"[a-z0-9]+", q.lower()))
