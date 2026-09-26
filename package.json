@@ -1,0 +1,15 @@
+{
+  "name": "groww-mf-faq",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/web", "functions/api", "packages/shared"],
+  "scripts": {
+    "build": "npm run build -w apps/web",
+    "test": "npm run test -w functions/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "eval": "python scripts/eval/run_eval.py",
+    "ingest": "python scripts/ingest/fetch_sources.py",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "npm run dev -w functions/api"
+  }
+}

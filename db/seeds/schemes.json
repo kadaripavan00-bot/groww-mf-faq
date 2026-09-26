@@ -1,0 +1,6 @@
+[
+  {"id": "groww-large-cap", "name": "Groww Large Cap Fund", "category": "Equity / Large Cap", "amc": "Groww Mutual Fund", "scheme_page_url": "https://groww.in/mutual-funds/groww-large-cap-fund-direct-growth"},
+  {"id": "groww-multicap", "name": "Groww Multicap Fund", "category": "Equity / Multi Cap", "amc": "Groww Mutual Fund", "scheme_page_url": "https://groww.in/mutual-funds/groww-multicap-fund-direct-growth"},
+  {"id": "groww-elss", "name": "Groww ELSS Tax Saver Fund", "category": "Equity / ELSS Tax Saver", "amc": "Groww Mutual Fund", "scheme_page_url": "https://groww.in/mutual-funds/groww-elss-tax-saver-fund-direct-growth"},
+  {"id": "groww-liquid", "name": "Groww Liquid Fund", "category": "Debt / Liquid", "amc": "Groww Mutual Fund", "scheme_page_url": "https://groww.in/mutual-funds/groww-liquid-fund-direct-growth"}
+]

@@ -1,0 +1,15 @@
+name: ingest-weekly
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+jobs:
+  reverify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/ingest/fetch_sources.py
+      - run: python scripts/crawl_funds.py

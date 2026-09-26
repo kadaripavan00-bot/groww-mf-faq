@@ -1,0 +1,107 @@
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+Mutual Fund FAQs — Facts-Only Q&A Assistant
+Format: plain text (.txt)
+Date: 2026-09-26
+Status: Draft for LIP milestone
+Product choice: Groww
+(ASSUMPTION: brief requires picking ONE of INDMoney / Groww / PowerUp Money /
+Wealth Monitor / Kuvera. "Groww" is assumed from prior scoping. If a different
+product is chosen, replace the AMC/scheme scope in Section 3 and the URL
+domains in Section 5 accordingly.)
+
+1. OBJECTIVE
+Build a small working FAQ assistant that answers factual questions about
+mutual fund schemes using ONLY official public pages. Every answer carries
+exactly one source link. The assistant gives facts, never advice.
+
+2. USERS
+- Retail investors comparing schemes (expense ratio, exit load, minimum SIP,
+  lock-in, riskometer, benchmark, statements).
+- Support / content teams answering repetitive MF questions.
+
+3. SCOPE
+3.1 Platform in scope: Groww (public web pages + help center).
+3.2 AMC in scope: Groww Mutual Fund.
+3.3 Schemes in scope (4):
+  1. Groww Large Cap Fund (large-cap)
+  2. Groww Multicap Fund (flexi-cap role)
+  3. Groww ELSS Tax Saver Fund (ELSS)
+  4. Groww Liquid Fund (liquid / statements example)
+3.4 Explicitly OUT of scope:
+  - Any other AMC or scheme (answer: link to official page or refuse).
+  - Opinionated / portfolio questions ("should I buy/sell?", "which is best?").
+  - Return computation or comparison (CAGR, XIRR, NAV growth).
+  - Accepting or storing PII (PAN, Aadhaar, account/folio numbers, OTPs,
+    emails, phone numbers).
+
+4. FUNCTIONAL REQUIREMENTS
+FR-1 Factual Q&A. Must answer: expense ratio, exit load, minimum SIP / lump
+  sum, ELSS lock-in (3 years, per-SIP-instalment), riskometer, benchmark,
+  how to download account / capital-gains statements.
+FR-2 One citation per answer. Every answer includes exactly one clear source
+  link to an official page (Groww / AMFI / SEBI). No third-party blogs.
+FR-3 Concise answers. Maximum 3 sentences per answer, plus the line:
+  "Last updated from sources: YYYY-MM-DD".
+FR-4 Safe refusals. Opinionated/portfolio questions get a polite facts-only
+  refusal plus one relevant educational link. Returns questions get a
+  refusal pointing to the official factsheet. PII in a query gets a
+  remove-personal-details message; nothing is stored.
+FR-5 Tiny UI. Welcome line, 3 example questions, and the note:
+  "Facts-only. No investment advice." Disclaimer snippet visible on screen:
+  "Mutual fund investments are subject to market risks. Read all scheme
+  related documents carefully. Facts-only. No investment advice."
+FR-6 Corpus. 15-25 public URLs from AMC/SEBI/AMFI: factsheets, KIM/SID hosts,
+  scheme pages, fee/charges pages, riskometer/benchmark notes,
+  statement/tax-doc guides. Stored as a source list (CSV/MD).
+
+5. NON-FUNCTIONAL REQUIREMENTS / CONSTRAINTS
+- Public sources only. No back-end screenshots; no blog content as sources.
+- No PII accepted or stored; no query logging with personal data.
+- No performance claims of any kind.
+- Zero-cost build and hosting (free tiers only).
+- Each cited URL must be a verified, fetched official page (never guessed).
+
+6. PROPOSED ARCHITECTURE (working prototype)
+- Static web app (HTML/CSS/JS), installable as PWA for Android/iOS.
+- facts.json: curated Q&A entries (question, answer <=3 sentences,
+  source title + URL, topic, scheme, verified date).
+- Retrieval: topic detector + scheme matcher + keyword scorer; fund-name
+  directory for out-of-scope schemes (link-only answers, no invented figures).
+- Guardrails run before retrieval: PII block, advice refusal, returns refusal.
+- Optional generative layer (only if budget allows): on-device LLM rewrite
+  grounded strictly on retrieved facts, with a citation-presence check and
+  extractive fallback. Default mode stays extractive/deterministic.
+
+7. DELIVERABLES (per milestone brief)
+D-1 Working prototype link (hosted app) or <=3-min demo video.
+D-2 Source list (CSV/MD) of the 15-25 URLs used.
+D-3 README: setup steps, scope (AMC + schemes), known limits.
+D-4 Sample Q&A file: 5-10 queries with the assistant's answers + links.
+D-5 Disclaimer snippet used in the UI (see FR-5).
+
+8. ACCEPTANCE CRITERIA
+AC-1 All 7 question types in FR-1 return <=3-sentence answers, each with one
+  working official link.
+AC-2 "Should I buy X?" returns the facts-only refusal + educational link.
+AC-3 A returns question returns the factsheet redirect, no numbers computed.
+AC-4 A query containing PAN/phone/account number is refused; nothing stored.
+AC-5 Sample Q&A file matches live assistant behavior for all listed queries.
+AC-6 Every URL in the source list loads and is on an official domain.
+
+9. SKILLS MAPPING (per brief)
+- W1 (Thinking Like a Model): classify each query to exact fact vs. refuse.
+- W2 (LLMs & Prompting): concise phrasing, polite refusals, citation wording.
+- W3 (RAGs only): small-corpus retrieval with accurate citations.
+
+10. KNOWN LIMITS & RISKS
+- Figures (TER, exit load, riskometer, AUM) change; answers carry a
+  last-verified date and must be re-crawled periodically.
+- Keyword retrieval can misroute similarly-named schemes; curated-scheme
+  priority + directory link-outs mitigate this.
+- Out-of-scope funds get link-only answers, not figures (by design).
+
+11. OPEN QUESTIONS
+- Confirm product choice (Groww assumed).
+- Confirm hosting target for the prototype link.
+- Confirm whether the generative layer is in scope for this milestone or a
+  later one.

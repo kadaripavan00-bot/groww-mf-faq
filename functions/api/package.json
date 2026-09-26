@@ -1,0 +1,19 @@
+{
+  "name": "@groww-mf-faq/api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "dev": "tsx ./src/local.ts"
+  },
+  "dependencies": {
+    "@groww-mf-faq/shared": "1.0.0",
+    "@neondatabase/serverless": "^0.10.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

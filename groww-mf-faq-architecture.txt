@@ -1,0 +1,254 @@
+SYSTEM ARCHITECTURE PLAN
+Groww Mutual Fund FAQ Assistant (Facts-Only RAG)
+Date: 2026-09-26 | Author mindset: senior software engineer
+Companion doc: groww-mf-faq-prd.txt (same folder)
+Scope of this file: architecture + file layout + data design ONLY. No code.
+
+================================================================
+0. SENIOR-LEVEL DECISIONS (the why before the what)
+================================================================
+D-1 Database: YES, Neon Postgres (new project, free tier) with pgvector.
+    Justification: the corpus is small but has lifecycle needs a flat file
+    cannot meet cleanly: (a) every fact must carry source URL + verified date
+    and history when figures change; (b) 15-25 sources need a registry with
+    fetch status; (c) we need anonymous feedback + query analytics without
+    touching PII; (d) pgvector gives us real semantic retrieval (proper RAG)
+    with zero new infrastructure. Neon serverless driver + pooling fits the
+    serverless backend with no connection management pain.
+D-2 Backend: serverless functions (TypeScript) co-located with the frontend
+    host (Vercel or Netlify, free tier). Justification: zero ops, zero cost,
+    auto-scale to zero, preview deploys per PR. No standing server to pay
+    for or keep awake (unlike Render/HF Spaces free tiers).
+D-3 Frontend: ONE codebase for web + Android + iOS. Vite + TypeScript + PWA
+    for web; Capacitor wraps the same web build into native Android/iOS
+    shells (0 cost, no App Store fees for sideload/PWA; store publishing is
+    a later, paid decision). No separate Expo/RN codebase to drift.
+D-4 Retrieval + generation: hybrid retrieval with an always-on hosted LLM
+    composer (Gemini, free tier - decision recorded 2026-09-26, Llama rejected
+    by product). Per query, in this order:
+    (1) guardrails (PII/advice/returns) -> refuse fast, no retrieval, no LLM;
+    (2) deterministic rules (scheme + topic match on curated facts);
+    (3) semantic fallback: pgvector cosine over fact embeddings (for
+    paraphrases like "cheapest liquid fund");
+    (4) fund-name directory match for out-of-scope schemes (link-only);
+    (5) scope-fallback refusal.
+    Composition: retrieve top-3 facts -> Gemini composes the displayed wording
+    under a strict prompt contract (Section 8) -> validator gates the output
+    (citation present, <=3 sentences, no advice/returns phrasing) ->
+    fail-closed fallback to the verbatim extractive answer on ANY violation,
+    timeout, or quota error. The deterministic extractive answer remains the
+    stored, logged, and evaluated result; the LLM produces display wording.
+    Refusal paths never call the LLM (fixed texts, zero quota spend).
+    REVIEWER NOTE (deliberate, not a limitation): the generator's freedom is
+    intentionally narrow - it rewords retrieved facts under contract instead
+    of answering from parametric knowledge. The PRD's citation, no-advice,
+    and no-returns guarantees REQUIRE this: the LLM buys fluency and
+    paraphrase-robustness, never knowledge. Verbatim extractive output remains
+    the stored, logged, and evaluated result.
+D-5 Embeddings: computed OFFLINE at ingest time with sentence-transformers
+    (all-MiniLM-L6-v2, 384-dim, L2-normalized) and stored in Neon's
+    facts.embedding column. Query-vector path (PINNED decision, no options):
+    the client embeds the query with Transformers.js (Xenova MiniLM-L6-v2,
+    mean pooling, L2-normalized - bit-compatible with ingest) and POSTs
+    {query, vector}; the server validates dims (=384) and norm (~1.0) and
+    runs the pgvector cosine query. Rationale: zero serverless cold-start ML,
+    zero new services, enforcement stays server-side, and a tampered vector
+    can at worst surface a wrong FAQ row - which the citation validator still
+    gates. pgvector ships in P1 (not v2): at 35 rows it is nearly free work
+    and the milestone demo must itself be defensible as neural RAG.
+D-6 Privacy by construction: PII scrubber runs BEFORE logging; logs store
+    intent/topic + lengths + result IDs, NEVER raw query text containing PII
+    patterns. Feedback stores fact_id + helpful boolean + timestamp only.
+
+================================================================
+1. SYSTEM OVERVIEW (data flow per question)
+================================================================
+[ PWA / Capacitor app ]
+        |  POST /api/ask { query }  (no auth; rate-limited)
+        v
+[ API: ask handler ]
+  1. Rate limit + PII scrub -> refuse PII with fixed message (nothing stored)
+  2. Intent classify: advice? returns? -> fixed refusals (no retrieval)
+  3. retrieve(): rules -> full-text/trigram -> pgvector cosine (client-supplied
+     MiniLM vector, server-validated) -> fund directory
+  4. compose(): Gemini (free tier) drafts display wording from top-3 facts
+     under the Section 8 prompt contract; validator gates it; ANY violation,
+     timeout, or quota error falls back to the verbatim extractive answer
+     (<=3 sentences + exactly 1 allowlisted citation +
+     "Last updated from sources: <max verified date>")
+  5. enforce(): validator rejects any response violating FR-2/FR-3/FR-4
+  6. log analytics (scrubbed) + return
+        |
+        v
+[ Neon Postgres ]  facts, sources, schemes, embeddings, feedback, query_stats
+
+Offline ingestion (CI cron, weekly):
+[ allowlisted fetch -> clean/chunk -> embed -> upsert + verify dates -> eval ]
+
+================================================================
+2. DATA ARCHITECTURE (Neon Postgres, new project: groww-mf-faq)
+================================================================
+TABLE schemes
+  id TEXT PK ('groww-large-cap', ...), name, category, amc, scheme_page_url,
+  created_at
+TABLE sources  (the 15-25 URL registry)
+  id SERIAL PK, url TEXT UNIQUE, title, kind (factsheet|kim|sid|faq|fees|
+  riskometer|benchmark|statement|help|regulatory), scheme_id NULLABLE FK,
+  last_fetched_at, last_verified_at, fetch_status, content_hash
+  CONSTRAINT: url must match allowlist (groww.in, amfiindia.com, sebi.gov.in...)
+TABLE facts  (curated answers; 1 row per Q&A)
+  id TEXT PK, scheme_id NULLABLE FK, topic TEXT, question TEXT,
+  answer TEXT (<=3 sentences, enforced by CHECK on sentence count),
+  source_id FK -> sources.id, verified_at DATE, is_popular BOOL,
+  embedding VECTOR(384) NOT NULL (semantic search; pgvector extension)
+TABLE fact_versions (audit when a figure changes)
+  id SERIAL PK, fact_id FK, answer, source_id, changed_at, change_reason
+TABLE fund_directory (all listed funds; link-only answers)
+  fund_name TEXT, url TEXT UNIQUE, last_seen_at
+TABLE feedback (anonymous)
+  id SERIAL PK, fact_id NULLABLE, helpful BOOL, created_at
+  (NO query text, NO user identifiers - by design)
+TABLE query_stats (PII-free analytics)
+  id SERIAL PK, intent TEXT, topic NULLABLE, result_kind TEXT
+  (fact|directory|refusal-advice|refusal-returns|refusal-pii|fallback),
+  created_at
+INDEXES: facts(topic, scheme_id); sources(url); fund_directory fund name
+  trigram (pg_trgm) for fuzzy name match; facts full-text tsvector on
+  question+answer; sequential cosine scan on embedding (35 rows; add ivfflat
+  only if the corpus ever passes ~10k vectors).
+MIGRATIONS: versioned SQL in db/migrations (e.g. 001_init.sql), applied by CI.
+
+================================================================
+3. FILE ARCHITECTURE (monorepo)
+================================================================
+groww-mf-faq/
+  groww-mf-faq-prd.txt            <- product requirements (this folder)
+  architecture-plan.txt           <- this file
+  README.md                       <- setup, scope, limits
+  package.json                    <- workspaces: apps/web, functions/api
+  turbo.json (or npm workspaces)  <- task orchestration
+  .github/workflows/
+    ci.yml                        <- lint + unit tests + golden Q&A eval
+    ingest-weekly.yml             <- cron: re-fetch sources, re-verify, PR on change
+  apps/
+    web/                          <- Vite + TS + PWA (the ONLY UI codebase)
+      src/
+        main.ts, App.tsx (or .ts views), components/ (AskBox, AnswerCard,
+        FaqList, PopularChips, Disclaimer), lib/api.ts, lib/guards.ts
+        (client-side pre-checks mirror server rules for instant feedback)
+      public/manifest.json, icons
+      capacitor.config.ts         <- Android/iOS shells from same build
+  functions/
+    api/                          <- serverless endpoints (TypeScript)
+      ask.ts                      <- POST /api/ask (guards->retrieve->compose->enforce)
+      sources.ts                  <- GET /api/sources (the 15-25 registry)
+      feedback.ts                 <- POST /api/feedback {fact_id, helpful}
+      lib/
+        guards.ts                 <- PII regex, advice/returns intents, refusals
+        retrieve.ts               <- rules + full-text/trigram + pgvector + directory
+        compose.ts                <- sentence cap, citation injection, dates
+        enforce.ts                <- response validator (fail-closed)
+        db.ts                     <- Neon serverless driver + pooling
+        allowlist.ts              <- official domains, shared client/server
+  packages/
+    shared/                       <- types + constants shared by web + api
+      (AnswerShape, intents, allowlisted domains, refusal texts)
+  db/
+    migrations/001_init.sql       <- schema from Section 2
+    seeds/
+      schemes.sql, sources.sql (15-25 URLs), facts.sql (35 Q&As)
+  scripts/
+    ingest/
+      fetch_sources.py            <- allowlisted fetch only; stores raw + hash
+      build_index.py              <- clean/chunk, upsert sources+facts
+      build_vectors.py            <- MiniLM embeddings -> facts.embedding
+      crawl_funds.py              <- fund-list a-z crawl -> fund_directory
+    eval/
+      golden_qa.json              <- 5-10 queries + expected answers/links
+      run_eval.py                 <- asserts citation present, <=3 sentences,
+                                     refusal behavior, link reachability
+  tests/
+    guards.test.ts, retrieve.test.ts, compose.test.ts, api.test.ts
+  docs/
+    source-list.md                <- deliverable D-2 (generated from DB)
+    sample-qa.md                  <- deliverable D-4 (generated by eval run)
+
+Why this shape: UI, API, and data contracts live in one repo so the citation
+validator, refusal texts, and allowlist cannot drift between client/server;
+ingest and eval are scripts (not services) so they cost $0 on CI cron.
+
+================================================================
+4. API CONTRACTS
+================================================================
+POST /api/ask  { "query": string(max 300), "vector"?: number[384] }
+  (vector = client-computed MiniLM query embedding; server validates dims +
+  norm before use; absent/invalid -> keyword-only retrieval, never an error)
+  -> 200 { answer: string(<=3 sentences), source: {title, url},
+           last_updated_from_sources: date, mode: fact|directory|refusal,
+           list?: [{name, url}] (listing queries, <=8) }
+  -> 429 rate-limited | 400 over-length/empty
+GET /api/sources -> [{ title, url, kind, last_verified_at }] (D-2 source)
+POST /api/feedback { fact_id?, helpful: bool } -> 200 (no PII accepted)
+
+================================================================
+5. NON-FUNCTIONALS
+================================================================
+- Cost: $0 (Vercel/Netlify free + Neon free + GH Actions free). Budgets:
+  Neon storage <100MB; embed job runs on CI, not on request path.
+- Latency: p95 ask <800ms (Neon SG region closest to IN users; pooled driver).
+- Security: secrets only in host env vars; no keys in client; CORS locked to
+  app origins; rate limit per IP; dependency audit in CI.
+- Reliability: fail-closed validator (any rule violation -> safe refusal);
+  preview deploy per PR; DB branch per PR via Neon branching.
+- Eval gate: CI fails if any golden answer lacks its citation, exceeds
+  3 sentences, or any source URL is unreachable.
+
+================================================================
+6. PHASED BUILD PLAN
+================================================================
+P0 Repo + schema + seeds (Neon new project, migrations, 35 facts + embeddings, 20 sources).
+P1 API (ask/sources/feedback, pgvector semantic fallback, validator) + unit tests.
+P2 Web UI (welcome, 3 examples, disclaimer, FAQ sections) + PWA.
+P3 Ingest cron + golden eval in CI; source-list + sample-qa generated docs.
+P4 Capacitor shells (Android/iOS) from same web build.
+P5 (v2) Hardening + scale-out: ivfflat if corpus grows, DB branching per PR, multilingual/Hinglish queries, on-device rewrite stays optional.
+
+================================================================
+8. HOSTED LLM: GEMINI (FREE TIER) - PROMPT CONTRACT + GUARDRAILS
+================================================================
+Provider: Google Gemini Flash via free tier; key ONLY in host env var
+(GEMINI_API_KEY), called server-side from ask.ts. No keys in the client.
+The LLM answers every factual query; refusal paths (advice/PII/returns)
+and the scope fallback never call it.
+PROMPT CONTRACT (system):
+  - Answer using ONLY the provided context facts. At most 3 sentences.
+  - End with exactly one line:  Source: <one URL copied from context>.
+  - Never give investment advice, never compute or compare returns, never
+    request or repeat personal data. If context is insufficient, output the
+    fixed scope-fallback text verbatim.
+  - Generation params: low temperature (<=0.2), max_tokens <=256, top-3
+    facts as context only (keeps quota per query minimal).
+VALIDATOR (fail-closed, runs on every LLM output):
+  V-1 Output contains exactly one of the context source URLs, else fallback.
+  V-2 Sentence count <=3 (split on [.?!]), else fallback.
+  V-3 No advice/returns/PII-request phrasing (shared denylist), else fallback.
+  V-4 Any timeout, API error, or quota exhaustion -> fallback (no user error).
+  Fallback = verbatim extractive answer (the stored/evaluated result).
+RATE LIMITS + QUOTA DEFENSE (public link spends one shared allowance):
+  - Per-IP rate limit on POST /api/ask (e.g. 30 req/min) -> 429 + retry hint.
+  - Exact-query response cache (short TTL) so repeats cost zero quota.
+  - Refusals and scope fallback cost zero quota (no LLM call).
+  - Monitoring: alert on quota-error rate; degradation mode = extractive
+    answers (the app never goes down, it only gets less fluent).
+PRIVACY: PII scrubber runs BEFORE any LLM call (load-bearing); raw queries
+  containing PII patterns are refused locally and never sent to Google.
+EVAL CHANGE: golden Q&A asserts semantic equivalence to expected answers
+  (key figures + cited URL must match) instead of verbatim text match,
+  since wording is now generated. Citation presence, sentence cap, and
+  refusal behavior remain exact-match gates.
+
+================================================================
+9. EXPLICIT NON-GOALS
+================================================================
+- No user accounts, no PII storage, no returns computation, no advice engine,
+  no non-allowlisted sources, no paid services, no separate native codebases.

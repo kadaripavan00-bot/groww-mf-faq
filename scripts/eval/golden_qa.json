@@ -1,0 +1,12 @@
+[
+  {"query": "What is the expense ratio of Groww Liquid Fund?", "expect_contains": ["Groww Liquid Fund", "0.11%"], "expect_url": "https://groww.in/mutual-funds/amc/groww-mutual-funds", "mode": "fact"},
+  {"query": "ELSS lock-in period?", "expect_contains": ["3-year lock-in"], "expect_url": "https://groww.in/mutual-funds/groww-elss-tax-saver-fund-direct-growth", "mode": "fact"},
+  {"query": "What is the minimum SIP for Groww Multicap Fund?", "expect_contains": ["Rs. 500"], "expect_url": "https://groww.in/mutual-funds/groww-multicap-fund-direct-growth", "mode": "fact"},
+  {"query": "What is the exit load of Groww Multicap Fund?", "expect_contains": ["1%"], "expect_url": "https://groww.in/mutual-funds/amc/groww-mutual-funds", "mode": "fact"},
+  {"query": "How to download capital-gains statement on Groww?", "expect_contains": ["Reports"], "expect_url": "https://groww.in/help", "mode": "fact"},
+  {"query": "Should I buy Groww Large Cap Fund?", "expect_contains": ["facts only, no investment advice"], "expect_url": "https://groww.in/mutual-funds/amc/groww-mutual-funds", "mode": "refusal"},
+  {"query": "Compare returns of liquid vs multicap", "expect_contains": ["do not compute or compare returns"], "expect_url": "https://groww.in/mutual-funds/amc/groww-mutual-funds", "mode": "refusal"},
+  {"query": "My PAN is ABCDE1234F please help", "expect_contains": ["remove personal details"], "expect_url": "https://groww.in/help", "mode": "refusal"},
+  {"query": "What is the expense ratio of Parag Parikh Flexi Cap Fund?", "expect_contains": ["official Groww page"], "expect_url": "parag-parikh-long-term-value-fund-direct-growth", "mode": "directory"},
+  {"query": "what hdfc funds exist", "expect_contains": ["Matching funds on Groww"], "expect_url": "https://groww.in/mutual-funds/filter", "mode": "fact"}
+]

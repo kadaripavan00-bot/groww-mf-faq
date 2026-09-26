@@ -1,0 +1,22 @@
+[
+  {"url": "https://groww.in/mutual-funds/amc/groww-mutual-funds", "title": "Groww Mutual Fund - AMC scheme list (AUM, NAV, expense, exit load, risk)", "kind": "fees", "scheme_id": null},
+  {"url": "https://groww.in/mutual-funds/groww-large-cap-fund-direct-growth", "title": "Groww Large Cap Fund - scheme page (factsheet/SID/KIM host)", "kind": "factsheet", "scheme_id": "groww-large-cap"},
+  {"url": "https://groww.in/mutual-funds/groww-multicap-fund-direct-growth", "title": "Groww Multicap Fund - scheme page", "kind": "factsheet", "scheme_id": "groww-multicap"},
+  {"url": "https://groww.in/mutual-funds/groww-elss-tax-saver-fund-direct-growth", "title": "Groww ELSS Tax Saver Fund - scheme page", "kind": "factsheet", "scheme_id": "groww-elss"},
+  {"url": "https://groww.in/mutual-funds/groww-liquid-fund-direct-growth", "title": "Groww Liquid Fund - scheme page", "kind": "factsheet", "scheme_id": "groww-liquid"},
+  {"url": "https://groww.in/mutual-funds", "title": "Groww Mutual Funds - platform home (Start SIP, direct plans)", "kind": "faq", "scheme_id": null},
+  {"url": "https://groww.in/help", "title": "Groww Help & Support (statements, reports, account)", "kind": "statement", "scheme_id": null},
+  {"url": "https://groww.in/", "title": "Groww home (platform disclosures, SEBI/AMFI registration)", "kind": "faq", "scheme_id": null},
+  {"url": "https://groww.in/mutual-funds/filter", "title": "Groww MF screener/filter (category + risk filter)", "kind": "faq", "scheme_id": null},
+  {"url": "https://groww.in/mutual-funds/category/best-elss-mutual-funds", "title": "Groww ELSS category explainer", "kind": "faq", "scheme_id": null},
+  {"url": "https://groww.in/mutual-funds/category/best-liquid-mutual-funds", "title": "Groww Liquid category explainer", "kind": "faq", "scheme_id": null},
+  {"url": "https://groww.in/mutual-funds/category/best-large-cap-mutual-funds", "title": "Groww Large cap category explainer", "kind": "faq", "scheme_id": null},
+  {"url": "https://groww.in/pricing", "title": "Groww pricing/fees disclosure page", "kind": "fees", "scheme_id": null},
+  {"url": "https://groww.in/help/my-account/searchable/how-to-call-groww-customer-care", "title": "Groww customer care contact + grievance routes (SCORES, SMART ODR)", "kind": "help", "scheme_id": null},
+  {"url": "https://www.amfiindia.com/", "title": "AMFI official portal (CAS, NAV, riskometer education)", "kind": "regulatory", "scheme_id": null},
+  {"url": "https://www.amfiindia.com/mutual-fund", "title": "AMFI mutual fund information section", "kind": "faq", "scheme_id": null},
+  {"url": "https://www.sebi.gov.in", "title": "SEBI official portal (MF circulars: ELSS, SID/KIM, riskometer)", "kind": "regulatory", "scheme_id": null},
+  {"url": "https://scores.sebi.gov.in", "title": "SEBI SCORES (grievance redressal portal)", "kind": "help", "scheme_id": null},
+  {"url": "https://smartodr.in/", "title": "SMART ODR (online dispute resolution)", "kind": "help", "scheme_id": null},
+  {"url": "https://groww.in/mutual-funds/amc", "title": "Groww mutual fund houses (AMC) listing", "kind": "faq", "scheme_id": null}
+]
