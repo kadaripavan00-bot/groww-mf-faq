@@ -1,10 +1,10 @@
 // Tiny local dev server: node --experimental-strip-types ./src/local.ts
 // Serves /api/ask, /api/sources, /api/feedback on :8787 (Vite proxies /api).
 import { createServer } from "node:http";
-import askHandler from "../api/ask.js";
-import sourcesHandler from "../api/sources.js";
-import feedbackHandler from "../api/feedback.js";
-import type { VercelRequest, VercelResponse } from "../api/vercel.js";
+import askHandler from "../../../api/ask.js";
+import sourcesHandler from "../../../api/sources.js";
+import feedbackHandler from "../../../api/feedback.js";
+import type { VercelRequest, VercelResponse } from "../../../api/vercel.js";
 
 const PORT = Number(process.env.API_PORT || 8787);
 

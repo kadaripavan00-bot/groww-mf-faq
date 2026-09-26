@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "./vercel.js";
-import { getStore } from "../src/lib/db.js";
+import { getStore } from "../functions/api/src/lib/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {

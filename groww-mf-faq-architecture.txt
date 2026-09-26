@@ -139,17 +139,13 @@ groww-mf-faq/
       public/manifest.json, icons
       capacitor.config.ts         <- Android/iOS shells from same build
   functions/
-    api/                          <- serverless endpoints (TypeScript)
-      ask.ts                      <- POST /api/ask (guards->retrieve->compose->enforce)
-      sources.ts                  <- GET /api/sources (the 15-25 registry)
-      feedback.ts                 <- POST /api/feedback {fact_id, helpful}
-      lib/
-        guards.ts                 <- PII regex, advice/returns intents, refusals
-        retrieve.ts               <- rules + full-text/trigram + pgvector + directory
-        compose.ts                <- sentence cap, citation injection, dates
-        enforce.ts                <- response validator (fail-closed)
-        db.ts                     <- Neon serverless driver + pooling
-        allowlist.ts              <- official domains, shared client/server
+    api/                          <- serverless logic (TypeScript)
+      src/
+        core/ask.ts               <- ask flow (guards->retrieve->compose->enforce)
+        lib/ (guards, retrieve, compose, enforce, db, gemini)
+      tests/ (guards, retrieve, compose, ask)
+  api/                            <- Vercel serverless endpoints (thin adapters)
+    ask.ts, sources.ts, feedback.ts (+ vercel.ts typings)
   packages/
     shared/                       <- types + constants shared by web + api
       (AnswerShape, intents, allowlisted domains, refusal texts)

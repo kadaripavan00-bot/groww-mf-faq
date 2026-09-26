@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "./vercel.js";
-import { ask, extractiveComposer } from "../src/core/ask.js";
-import { geminiComposer } from "../src/lib/gemini.js";
-import { getStore } from "../src/lib/db.js";
+import { ask, extractiveComposer } from "../functions/api/src/core/ask.js";
+import { geminiComposer } from "../functions/api/src/lib/gemini.js";
+import { getStore } from "../functions/api/src/lib/db.js";
 
 const RATE = new Map<string, number[]>();
 function rateLimited(ip: string): boolean {
