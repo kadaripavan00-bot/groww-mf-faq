@@ -36,6 +36,16 @@ describe("ask flow", () => {
     expect(res.mode).toBe("directory");
     expect(res.source.url).toContain("parag-parikh");
   });
+  it("answers bare '<AMC/category> funds' with a listing", async () => {
+    for (const q of ["hdfc funds", "liquid funds", "SBI schemes"]) {
+      const { res } = await ask(q, undefined, { store, composer: extractiveComposer });
+      const list = "list" in res && res.list ? res.list : [];
+      expect(list.length).toBeGreaterThanOrEqual(3);
+    }
+    const { res } = await ask("What is the riskometer level of these Groww funds?", undefined, { store, composer: extractiveComposer });
+    expect(res.mode).toBe("fact");
+    expect(res.answer).toContain("riskometer");
+  });
   it("answers listing queries with official links", async () => {
     const { res } = await ask("what hdfc funds exist", undefined, { store, composer: extractiveComposer });
     const list = "list" in res && res.list ? res.list : [];

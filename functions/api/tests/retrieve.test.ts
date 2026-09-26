@@ -31,6 +31,12 @@ describe("retrieve", () => {
     const boosted = applyCosine(base, [1], new Map());
     expect(boosted).toHaveLength(2);
   });
+  it("detects bare '<AMC/category> funds' as listing intent", () => {
+    expect(isListingQuery("hdfc funds")).toBe(true);
+    expect(isListingQuery("liquid funds")).toBe(true);
+    expect(isListingQuery("SBI schemes")).toBe(true);
+    expect(isListingQuery("What is the expense ratio of Groww Liquid Fund?")).toBe(false);
+  });
   it("finds directory funds and listing queries", () => {
     const idx = buildDirIndex([
       { fund_name: "Parag Parikh Flexi Cap Fund", url: "https://groww.in/mutual-funds/parag-parikh-long-term-value-fund-direct-growth" },

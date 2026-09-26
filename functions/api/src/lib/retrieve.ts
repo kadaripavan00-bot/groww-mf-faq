@@ -26,7 +26,7 @@ export function normName(s: string): string {
 
 const FUND_STOP = new Set(["what","is","the","of","for","on","a","an","tell","me","about","show","give","fund","funds","mutual","direct","growth","plan","and","in","to","how","does","do","expense","ratio","exit","load","minimum","sip","lock","nav","factsheet","fact","sheet"]);
 
-const LIST_STOP = new Set([...FUND_STOP, "list","lists","listed","exist","exists","existing","available","there","all","any","schemes","scheme","names","name","which","with","that","those","are"]);
+const LIST_STOP = new Set([...FUND_STOP, "groww", "list","lists","listed","exist","exists","existing","available","there","all","any","schemes","scheme","names","name","which","with","that","those","are"]);
 
 export function detectTopic(q: string): Topic | null {
   const s = q.toLowerCase();
@@ -150,7 +150,11 @@ export function findFund(query: string, index: Array<{ name: string; url: string
 }
 
 export function isListingQuery(q: string): boolean {
-  return /\blist\b|\bshow\b|\bexist\b|which funds|what funds|funds (available|exist|are there)|all .{0,20}funds/.test(q.toLowerCase());
+  const s = q.toLowerCase();
+  return /\blist\b|\bshow\b|\bexist\b|which funds|what funds|funds (available|exist|are there)|all .{0,20}funds/.test(s)
+    // Bare "<AMC/category> funds" ("hdfc funds", "liquid funds", "SBI schemes"):
+    // listFunds decides; "groww" alone is stopped so curated questions win.
+    || /\bfunds\b|\bschemes?\b/.test(s);
 }
 
 export function listFunds(

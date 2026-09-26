@@ -55,7 +55,7 @@ def main():
             kind = "directory" if hit else "missing"
             ans = "official Groww page " + (hit[0]["fund_name"] if hit else "")
             url = hit[0]["url"] if hit else ""
-        elif "funds exist" in q.lower() or q.lower().startswith("list "):
+        elif re.search(r"funds|schemes|what funds|which funds|\blist\b|\bshow\b|\bexist\b", q.lower()):
             qtok = [t for t in re.findall(r"[a-z0-9]+", q.lower())
                     if t not in {"what", "list", "funds", "exist", "show", "me", "all"}]
             hits = [d for d in directory
