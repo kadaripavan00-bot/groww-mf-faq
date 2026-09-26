@@ -1,4 +1,9 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "apps/web/dist"
+  "outputDirectory": "apps/web/dist",
+  "functions": {
+    "api/ask.ts": { "includeFiles": "db/seeds/*.json" },
+    "api/sources.ts": { "includeFiles": "db/seeds/*.json" },
+    "api/feedback.ts": { "includeFiles": "db/seeds/*.json" }
+  }
 }

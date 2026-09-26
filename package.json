@@ -2,6 +2,7 @@
   "name": "groww-mf-faq",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "workspaces": ["apps/web", "functions/api", "packages/shared"],
   "scripts": {
     "build": "npm run build -w apps/web",
