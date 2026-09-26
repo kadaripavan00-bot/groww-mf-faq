@@ -3,6 +3,9 @@
 Facts-only Q&A about Groww Mutual Fund schemes. Every answer carries one
 official source link. No advice, no returns computed, no PII stored.
 
+Live: https://groww-mf-faq-omega.vercel.app
+Repo: https://github.com/kadaripavan00-bot/groww-mf-faq
+
 ## Scope
 - AMC: Groww Mutual Fund. Schemes: Large Cap, Multicap, ELSS Tax Saver, Liquid.
 - Corpus: 20 public pages (Groww / AMFI / SEBI) + 3,328-fund directory + 35 FAQs.
